@@ -5,10 +5,19 @@ import android.content.SharedPreferences
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.datastore.preferences.preferencesDataStore
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
-import androidx.security.crypto.MasterKeys
 import com.canonal.sharedpref.databinding.ActivityMainBinding
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
+
+
+val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
 
 class MainActivity : AppCompatActivity() {
 
@@ -102,6 +111,24 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+        val EXAMPLE_COUNTER = intPreferencesKey("example_counter")
+        val exampleCounterFlow: Flow<Int> = dataStore.data.map { preferences ->
+            //No type safety
+            preferences[EXAMPLE_COUNTER] ?: 0
+
+        }
+
+        //incrementCounter(EXAMPLE_COUNTER)
+
+    }
+
+    suspend fun incrementCounter(EXAMPLE_COUNTER: Preferences.Key<Int>){
+        dataStore.edit { settings ->
+            //read
+            val currentCounterValue = settings[EXAMPLE_COUNTER] ?: 0
+            //write
+            settings[EXAMPLE_COUNTER] = currentCounterValue + 1
+        }
     }
 
     private fun saveOrClearSharedPreferences(
